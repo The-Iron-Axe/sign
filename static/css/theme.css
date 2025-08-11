@@ -1,0 +1,168 @@
+/* ===================================================================
+   1. 主题颜色变量定义
+=================================================================== */
+
+/* 默认深色模式 (沿用您原来的样式) */
+body, body[data-bs-theme="dark"] {
+    --primary-color: #4361ee;
+    --secondary-color: #3f3c79;
+    --accent-color: #4cc9f0;
+    --dark-color: #1d3557;
+    --light-color: #f8f9fa;
+    --text-color: #e0e0e0;
+    --body-bg-color: linear-gradient(135deg, #1d3557 0%, #457b9d 100%);
+    --card-bg-color: rgba(255, 255, 255, 0.08);
+    --card-header-bg-color: rgba(67, 97, 238, 0.2);
+    --card-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+    --sidebar-bg-color: rgba(29, 53, 87, 0.9);
+    --nav-link-hover-bg: rgba(67, 97, 238, 0.3);
+    --border-color: rgba(255, 255, 255, 0.1);
+    --backdrop-filter-blur: blur(10px);
+    --bs-body-color: #e0e0e0; /* 覆盖 Bootstrap 颜色 */
+}
+
+/* 浅色模式 */
+body[data-bs-theme="light"] {
+    --primary-color: #0d6efd;
+    --secondary-color: #0a58ca;
+    --accent-color: #0dcaf0;
+    --dark-color: #212529;
+    --light-color: #f8f9fa;
+    --text-color: #212529;
+    --body-bg-color: #f4f7fc;
+    --card-bg-color: #ffffff;
+    --card-header-bg-color: #f8f9fa;
+    --card-shadow: 0 4px 15px rgba(0, 0, 0, 0.07);
+    --sidebar-bg-color: #ffffff;
+    --nav-link-hover-bg: #e9ecef;
+    --border-color: #dee2e6;
+    --backdrop-filter-blur: none;
+    --bs-body-color: #212529; /* 覆盖 Bootstrap 颜色 */
+}
+
+/* ===================================================================
+   2. 通用组件样式 (使用变量)
+=================================================================== */
+body {
+    /* --- FIX: 在这里统一指定字体 --- */
+    font-family: 'Noto Sans SC', sans-serif;
+    background: var(--body-bg-color);
+    color: var(--bs-body-color);
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.sidebar {
+    background: var(--sidebar-bg-color);
+    backdrop-filter: var(--backdrop-filter-blur);
+    box-shadow: var(--card-shadow);
+    border-right: 1px solid var(--border-color);
+}
+.sidebar .logo-container p {
+    color: var(--bs-body-color);
+    opacity: 0.7;
+}
+.sidebar .nav-links a {
+    color: var(--bs-body-color);
+}
+.sidebar .nav-links a:hover {
+    background: var(--nav-link-hover-bg);
+}
+.sidebar .nav-links a.active {
+    background: var(--primary-color);
+    color: var(--light-color);
+}
+
+.card {
+    background: var(--card-bg-color);
+    backdrop-filter: var(--backdrop-filter-blur);
+    box-shadow: var(--card-shadow);
+    border: 1px solid var(--border-color);
+    color: var(--text-color);
+}
+
+.card-header {
+    background: var(--card-header-bg-color);
+    border-bottom: 1px solid var(--border-color);
+    color: var(--text-color) !important;
+}
+
+h1, h2, h3, h4, h5, h6, .card-title {
+    color: var(--text-color);
+}
+
+.header h1, .header h2, .card-header .mb-0, .gesture-name, .stat-value {
+    color: var(--accent-color);
+}
+body[data-bs-theme="light"] .header h1,
+body[data-bs-theme="light"] .header h2,
+body[data-bs-theme="light"] .card-header .mb-0,
+body[data-bs-theme="light"] .gesture-name,
+body[data-bs-theme="light"] .stat-value {
+    color: var(--primary-color);
+}
+
+.btn-primary {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+.btn-primary:hover {
+    background-color: var(--secondary-color);
+    border-color: var(--secondary-color);
+}
+
+/* 覆盖其他页面的特定颜色 */
+.recognition-result {
+    background: rgba(76, 201, 240, 0.15);
+}
+body[data-bs-theme="light"] .recognition-result {
+    background: #e7f9ff;
+}
+
+.table-dark {
+    --bs-table-bg: transparent;
+}
+.table-dark td, .table-dark th {
+    border-color: var(--border-color);
+}
+body[data-bs-theme="light"] .table-dark {
+    --bs-table-color: #000;
+    --bs-table-bg: #fff;
+    --bs-table-border-color: #dee2e6;
+}
+
+
+/* ===================================================================
+   3. 主题切换器样式
+=================================================================== */
+.theme-switcher {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 1050;
+    width: 40px;
+    height: 40px;
+    background-color: var(--card-bg-color);
+    border: 1px solid var(--border-color);
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    box-shadow: var(--card-shadow);
+    transition: background-color 0.3s, border-color 0.3s;
+}
+
+.theme-switcher i {
+    font-size: 1.2rem;
+    color: var(--accent-color);
+    transition: color 0.3s;
+}
+body[data-bs-theme="light"] .theme-switcher i {
+    color: var(--primary-color);
+}
+
+.theme-switcher .fa-sun { display: none; }
+.theme-switcher .fa-moon { display: block; }
+
+body[data-bs-theme="light"] .theme-switcher .fa-sun { display: block; }
+body[data-bs-theme="light"] .theme-switcher .fa-moon { display: none; }

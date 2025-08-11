@@ -1,0 +1,430 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>双向手语翻译系统</title>
+  <link rel="icon" href="{% static 'images/favicon.ico' %}" type="image/x-icon">
+  <link href="{% static 'vendor/bootstrap/css/bootstrap.min.css' %}" rel="stylesheet">
+  <link rel="stylesheet" href="{% static 'vendor/bootstrap-icons/bootstrap-icons.css' %}">
+  <style>
+    :root {
+      --primary-color: #4361ee;
+      --secondary-color: #3f37c9;
+      --accent-color: #4cc9f0;
+      --dark-color: #1d3557;
+      --light-color: #f8f9fa;
+    }
+
+    body {
+      background: linear-gradient(135deg, #1d3557 0%, #457b9d 100%);
+      color: var(--light-color);
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      min-height: 100vh;
+      padding-bottom: 2rem;
+    }
+
+    .sidebar {
+      position: fixed; left: 0; top: 0; height: 100vh; width: 250px;
+      background: rgba(29, 53, 87, 0.9); backdrop-filter: blur(10px);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3); z-index: 1000;
+      padding: 1.5rem 1rem; overflow-y: auto;
+    }
+
+    .logo-container { text-align: center; margin-bottom: 2rem; padding-bottom: 1.5rem; border-bottom: 1px solid rgba(255, 255, 255, 0.1); }
+    .logo { width: 80px; height: 80px; border-radius: 50%; margin-bottom: 1rem; }
+
+    .nav-links { list-style: none; padding: 0; margin: 0; }
+    .nav-links li { margin-bottom: 0.5rem; }
+    .nav-links a { display: flex; align-items: center; padding: 0.8rem 1.2rem; color: var(--light-color); text-decoration: none; border-radius: 8px; transition: all 0.3s ease; }
+    .nav-links a:hover { background: rgba(67, 97, 238, 0.3); }
+    .nav-links a.active { background: var(--primary-color); }
+    .nav-links i { margin-right: 0.8rem; font-size: 1.2rem; }
+
+    .app-container {
+      margin-left: 250px; width: calc(100% - 250px);
+      padding: 1rem; display: flex; flex-direction: column;
+    }
+
+    .card {
+      background: rgba(255, 255, 255, 0.08); border-radius: 15px; border: none;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2); backdrop-filter: blur(10px);
+      margin-bottom: 2rem; transition: transform 0.3s ease;
+    }
+    .card:hover { transform: translateY(-5px); }
+
+    .card-header {
+      background: rgba(67, 97, 238, 0.2); border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      font-weight: 600; font-size: 1.2rem; padding: 1rem 1.5rem;
+      border-radius: 15px 15px 0 0 !important; color: #fff !important;
+    }
+    .card-header span, .card-header h2, .card-header h4 { color: #fff !important; }
+
+    .header h1 { font-weight: 700; font-size: 2.5rem; color: var(--accent-color); }
+    .header p { opacity: 0.9; }
+
+    .btn { background: var(--primary-color); border: none; border-radius: 50px; padding: 0.8rem 1.5rem; font-weight: 600; transition: all 0.3s ease; }
+    .btn:hover { background: var(--secondary-color); transform: translateY(-3px); box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3); }
+    .btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+    /* --- Tab Styles --- */
+    .language-tabs { display: flex; justify-content: center; margin-bottom: 20px; flex-wrap: wrap; }
+    .language-tab { padding: 10px 20px; cursor: pointer; border-radius: 5px; background: rgba(255,255,255,0.1); margin: 5px; transition: all 0.3s ease; }
+    .language-tab.active { background: var(--primary-color); color: white; }
+    .language-tab:hover { background: rgba(255,255,255,0.2); }
+
+    /* --- Mode 1: Online IFrame Styles (Exact from File 1) --- */
+    #en-online-container { display: none; }
+    .iframe-container {
+      position: relative; width: 100%; height: calc(100vh - 200px);
+      overflow: hidden; border-radius: 10px;
+    }
+    .iframe-wrapper {
+      position: absolute; top: -110px; bottom: -40px;
+      left: 0; right: 0; overflow: hidden;
+    }
+    .iframe-wrapper iframe {
+      width: 100%; height: calc(100% + 150px); border: none;
+      transform: translateY(-60px); /* Adjust this value if needed */
+    }
+
+    /* --- Mode 2 & 3: Offline Layout Styles (Exact from File 2) --- */
+    .offline-mode-container { display: none; }
+    .offline-mode-container .row {
+      display: flex; flex-wrap: wrap;
+      height: calc(100vh - 350px); /* Adjusted height for consistent view */
+      min-height: 500px;
+    }
+    .offline-mode-container .col-lg-6 { height: 100%; display: flex; flex-direction: column; }
+    .offline-mode-container .card { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+    .offline-mode-container .card-body { flex: 1; display: flex; flex-direction: column; overflow: hidden; padding: 1.5rem; }
+    .offline-mode-container .mb-3 { flex: 1; display: flex; flex-direction: column; min-height: 0; }
+    .offline-mode-container textarea.form-control { flex: 1; min-height: 150px; resize: vertical; overflow-y: auto; }
+    .offline-mode-container .animation-preview {
+      flex: 1; position: relative; width: 100%; height: auto; padding-bottom: 0;
+      background: #000; border-radius: 10px; overflow: hidden;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .offline-mode-container .animation-preview video { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: contain; }
+    .offline-mode-container .placeholder-text { text-align: center; color: rgba(255, 255, 255, 0.5); }
+    .offline-mode-container .placeholder-text i { font-size: 3rem; margin-bottom: 1rem; display: block; }
+    .offline-mode-container .animation-controls { display: none; flex-wrap: wrap; gap: 1rem; justify-content: center; margin-top: 1rem; }
+
+    /* --- Global Styles --- */
+    footer { text-align: center; margin-top: auto; padding: 1.5rem; font-size: 0.9rem; opacity: 0.7; border-top: 1px solid rgba(255, 255, 255, 0.1); }
+    #historyList .list-group-item { background: transparent !important; color: #fff; border: none; border-bottom: 1px solid rgba(255,255,255,0.18); cursor: pointer; }
+    #historyList .list-group-item:last-child { border-bottom: none; }
+    .floating-alert { position: fixed; top: 30px; right: 30px; z-index: 2000; padding: 1rem 1.5rem; font-size: 1.1rem; opacity: 0; pointer-events: none; transition: opacity 0.4s, top 0.4s; ... }
+    .floating-alert.show { opacity: 1; pointer-events: auto; top: 50px; }
+    #loaderOverlay { display:none; position:fixed; top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.35);z-index:3000;justify-content:center;align-items:center; }
+    .loader { width: 48px; height: 48px; border: 5px solid rgba(255, 255, 255, 0.2); border-radius: 50%; border-top-color: var(--accent-color); animation: spin 1s ease-in-out infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    @media (max-width: 991px) {
+      .offline-mode-container .row { height: auto; min-height: auto; }
+      .offline-mode-container .col-lg-6 { margin-bottom: 2rem; }
+    }
+    @media (max-width: 768px) {
+      .sidebar { width: 100%; height: auto; position: relative; }
+      .app-container { margin-left: 0; width: 100%; }
+      .iframe-container { min-height: 400px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="sidebar">
+    <div class="logo-container">
+      <img src="{% static 'images/logo.png' %}" alt="Logo" class="logo">
+      <h4>双向手语翻译系统</h4>
+      <p>基于ASL实现手语双向翻译<br>帮助残障人士与世界沟通</p>
+    </div>
+    <ul class="nav-links">
+        <li><a href="{% url 'sign_app:realtime' %}"><i class="bi bi-camera"></i> 孤立手语识别</a></li>
+        <li><a href="{% url 'sign_app:continuous' %}"><i class="bi bi-collection-play"></i> 连续手语翻译</a></li>
+        <li><a href="{% url 'sign_app:animation' %}" class="active"><i class="bi bi-play-circle"></i> 手语动画生成</a></li>
+        <li><a href="{% url 'sign_app:image_recognition' %}"><i class="bi bi-images"></i> 中文手语图片识别</a></li>
+        <li><a href="{% url 'sign_app:video_recognition' %}"><i class="bi bi-film"></i> 中文手语视频识别</a></li>
+        <li><a href="{% url 'sign_app:learning' %}"><i class="bi bi-book"></i> 学习模式</a></li>
+        <li><a href="{% url 'sign_app:statistics' %}"><i class="bi bi-bar-chart-line"></i> 统计分析</a></li>
+        <li><a href="{% url 'sign_app:technology' %}"><i class="bi bi-lightbulb"></i> 技术原理</a></li>
+        <li><a href="{% url 'sign_app:about' %}"><i class="bi bi-people"></i> 关于我们</a></li>
+    </ul>
+  </div>
+
+  <div class="app-container">
+    <div class="header text-center mb-4">
+      <h1>手语动画生成</h1>
+      <p>选择模式并输入文本，系统将自动生成对应的手语动画</p>
+    </div>
+
+    <!-- Mode Tabs -->
+    <div class="language-tabs">
+      <div class="language-tab active" data-mode="en-online">英文手语 (在线)</div>
+      <div class="language-tab" data-mode="zh-offline">中文手语 (离线)</div>
+      <div class="language-tab" data-mode="en-offline">英文手语 (离线)</div>
+    </div>
+
+    <!-- Mode 1: English Online (IFrame) -->
+    <div id="en-online-container" class="mode-container">
+      <div class="iframe-container">
+        <div class="iframe-wrapper">
+          <iframe src="https://sign.mt" frameborder="0" allowfullscreen></iframe>
+        </div>
+      </div>
+    </div>
+
+    <!-- Mode 2: Chinese Offline -->
+    <div id="zh-offline-container" class="mode-container offline-mode-container">
+      <div class="row">
+        <div class="col-lg-6">
+          <div class="card">
+            <div class="card-header">文本输入 (中文)</div>
+            <div class="card-body">
+              <div class="mb-3">
+                <textarea class="form-control" id="inputTextZh" placeholder="输入要翻译的中文文本..."></textarea>
+              </div>
+              <button id="generateBtnZh" class="btn btn-primary w-100"><i class="bi bi-play-circle"></i> 生成动画</button>
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-6">
+          <div class="card">
+            <div class="card-header">动画预览</div>
+            <div class="card-body">
+              <div class="animation-preview" id="animationPreviewZh">
+                <div class="placeholder-text"><i class="bi bi-play-btn"></i><p>生成的动画将显示在这里</p></div>
+              </div>
+              <div class="animation-controls" id="animationControlsZh"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Mode 3: English Offline -->
+    <div id="en-offline-container" class="mode-container offline-mode-container">
+      <div class="row">
+        <div class="col-lg-6">
+          <div class="card">
+            <div class="card-header">Text Input (English)</div>
+            <div class="card-body">
+              <div class="mb-3">
+                <textarea class="form-control" id="inputTextEn" placeholder="Enter English text to translate..."></textarea>
+              </div>
+              <button id="generateBtnEn" class="btn btn-primary w-100"><i class="bi bi-play-circle"></i> Generate Animation</button>
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-6">
+          <div class="card">
+            <div class="card-header">Animation Preview</div>
+            <div class="card-body">
+              <div class="animation-preview" id="animationPreviewEn">
+                <div class="placeholder-text"><i class="bi bi-play-btn"></i><p>Generated animation will appear here</p></div>
+              </div>
+              <div class="animation-controls" id="animationControlsEn"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Global History Section -->
+    <div class="row mt-4">
+      <div class="col-12">
+        <div class="card">
+          <div class="card-header d-flex justify-content-between align-items-center">
+            <span>历史输入记录</span>
+            <button id="clearHistoryBtn" class="btn btn-sm btn-danger">清除历史记录</button>
+          </div>
+          <div class="card-body" style="max-height: 250px; overflow-y: auto;">
+            <ul id="historyList" class="list-group list-group-flush"></ul>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <footer><p>手势识别系统 © 2025 | 基于Django和TensorFlow Lite构建</p></footer>
+  </div>
+
+  <div id="loaderOverlay"><div class="loader"></div></div>
+  <div id="floatingAlert" style="display:none;"></div>
+
+  <script src="{% static 'vendor/bootstrap/js/bootstrap.bundle.min.js' %}"></script>
+  <script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // --- ELEMENTS & STATE ---
+    const languageTabs = document.querySelectorAll('.language-tab');
+    const modeContainers = document.querySelectorAll('.mode-container');
+    const historyList = document.getElementById('historyList');
+    const clearHistoryBtn = document.getElementById('clearHistoryBtn');
+    let isGenerating = false;
+
+    // --- TAB SWITCHING ---
+    languageTabs.forEach(tab => {
+      tab.addEventListener('click', function() {
+        if (this.classList.contains('active')) return;
+        languageTabs.forEach(t => t.classList.remove('active'));
+        this.classList.add('active');
+        const targetMode = this.getAttribute('data-mode');
+        modeContainers.forEach(container => {
+          container.style.display = container.id.startsWith(targetMode) ? 'block' : 'none';
+        });
+      });
+    });
+    document.querySelector('.language-tab').click(); // Activate first tab on load
+
+    // --- SHARED UTILITIES ---
+    const getCSRFToken = () => document.cookie.split('; ').find(r => r.startsWith('csrftoken='))?.split('=')[1] || '';
+    const showAlert = (message, type = 'info') => { /* ... (alert logic as before) ... */ };
+
+    // --- HISTORY MANAGEMENT ---
+    async function loadHistory() {
+        historyList.innerHTML = '<li class="list-group-item text-center" style="color:#aaa;">加载中...</li>';
+        try {
+            const res = await fetch('/get_animation_history/');
+            if (!res.ok) throw new Error('Failed to fetch history');
+            const data = await res.json();
+            historyList.innerHTML = ''; // Clear loading text
+            if (data.history && data.history.length > 0) {
+                const uniqueHistory = [...new Map(data.history.reverse().map(item => [item.text, item])).values()].reverse();
+                uniqueHistory.forEach(item => {
+                    const li = document.createElement('li');
+                    li.className = 'list-group-item';
+                    li.textContent = item.text;
+                    li.title = `点击回放 '${item.text}'`;
+                    li.onclick = () => {
+                        const mode = item.lang === 'zh' ? 'zh-offline' : 'en-offline';
+                        const previewId = `animationPreview${item.lang.charAt(0).toUpperCase() + item.lang.slice(1)}`;
+                        if (item.video_file) {
+                            document.querySelector(`.language-tab[data-mode="${mode}"]`).click();
+                            renderVideoPlayer(item.video_file, previewId);
+                        } else {
+                            showAlert('该历史记录无关联视频文件', 'warning');
+                        }
+                    };
+                    historyList.appendChild(li);
+                });
+            } else {
+                historyList.innerHTML = '<li class="list-group-item text-center" style="color:#aaa;">暂无历史记录</li>';
+            }
+        } catch (e) {
+            historyList.innerHTML = '<li class="list-group-item text-center" style="color:#aaa;">加载失败</li>';
+        }
+    }
+    clearHistoryBtn.addEventListener('click', async () => { /* ... (clear history logic as before) ... */ });
+
+    // --- VIDEO & ANIMATION ---
+    function renderVideoPlayer(videoUrl, previewId) {
+        const previewEl = document.getElementById(previewId);
+        const controlsEl = document.getElementById(previewId.replace('Preview', 'Controls'));
+
+        previewEl.innerHTML = `<video src="${videoUrl}" style="width:100%; height:100%; object-fit: contain;" controls autoplay></video>`;
+        const video = previewEl.querySelector('video');
+
+        controlsEl.innerHTML = `
+            <button class="btn btn-secondary rewind-btn"><i class="bi bi-skip-backward"></i> 重播</button>
+            <button class="btn btn-primary play-pause-btn"><i class="bi bi-pause"></i> 暂停</button>
+            <button class="btn btn-secondary download-btn"><i class="bi bi-download"></i> 下载</button>`;
+        controlsEl.style.display = 'flex';
+
+        const playPauseBtn = controlsEl.querySelector('.play-pause-btn');
+        video.onplay = () => playPauseBtn.innerHTML = '<i class="bi bi-pause"></i> 暂停';
+        video.onpause = () => playPauseBtn.innerHTML = '<i class="bi bi-play"></i> 播放';
+
+        controlsEl.querySelector('.rewind-btn').onclick = () => { video.currentTime = 0; video.play(); };
+        playPauseBtn.onclick = () => video.paused ? video.play() : video.pause();
+        controlsEl.querySelector('.download-btn').onclick = () => {
+            const a = document.createElement('a');
+            a.href = videoUrl;
+            a.download = `sign_animation.mp4`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        };
+    }
+
+    async function handleGeneration(lang, textInputId, previewId, generateBtnId) {
+        if (isGenerating) return;
+        const text = document.getElementById(textInputId).value.trim();
+        const generateBtn = document.getElementById(generateBtnId);
+        if (!text) return showAlert('请输入文本', 'warning');
+
+        isGenerating = true;
+        generateBtn.disabled = true;
+        generateBtn.innerHTML = '<i class="bi bi-hourglass"></i> 生成中...';
+        document.getElementById('loaderOverlay').style.display = 'flex';
+
+        try {
+            const formData = new FormData();
+            formData.append('text', text);
+            formData.append('lang', lang);
+            formData.append('csrfmiddlewaretoken', getCSRFToken());
+
+            const res = await fetch('{% url "sign_app:generate-animation" %}', { method: 'POST', body: formData });
+            const data = await res.json();
+            if (!res.ok || data.error) throw new Error(data.error || '生成失败');
+
+            showAlert('动画生成完成！', 'success');
+            renderVideoPlayer(data.video_url, previewId);
+            loadHistory();
+        } catch (error) {
+            showAlert(`生成失败: ${error.message}`, 'danger');
+            document.getElementById(previewId).innerHTML = `<div class="placeholder-text"><i class="bi bi-exclamation-triangle"></i><p>动画生成失败</p></div>`;
+        } finally {
+            isGenerating = false;
+            generateBtn.disabled = false;
+            generateBtn.innerHTML = `<i class="bi bi-play-circle"></i> ${lang === 'zh' ? '生成动画' : 'Generate Animation'}`;
+            document.getElementById('loaderOverlay').style.display = 'none';
+        }
+    }
+
+    // --- EVENT BINDING ---
+    document.getElementById('generateBtnZh').onclick = () => handleGeneration('zh', 'inputTextZh', 'animationPreviewZh', 'generateBtnZh');
+    document.getElementById('generateBtnEn').onclick = () => handleGeneration('en', 'inputTextEn', 'animationPreviewEn', 'generateBtnEn');
+
+    // --- INITIALIZATION ---
+    loadHistory();
+    // Re-pasting alert and clear history logic for completeness
+    showAlert = (message, type = 'info') => {
+      const alertDiv = document.getElementById('floatingAlert');
+      if (!alertDiv) return;
+      const icons = { warning: 'bi-exclamation-triangle', danger: 'bi-x-circle', success: 'bi-check-circle', info: 'bi-info-circle' };
+      alertDiv.innerHTML = `<i class="bi ${icons[type]}"></i> ${message}`;
+      alertDiv.className = `floating-alert show ${type}`;
+      alertDiv.style.display = 'flex';
+      alertDiv.style.cssText += 'position:fixed;top:30px;right:30px;min-width:220px;z-index:2000;padding:1rem 1.5rem;font-size:1.1rem;opacity:0;pointer-events:none;transition:opacity 0.4s, top 0.4s;border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,0.18);';
+      requestAnimationFrame(() => {
+        alertDiv.classList.add('show');
+        alertDiv.style.opacity = '1';
+        alertDiv.style.top = '50px';
+      });
+      setTimeout(() => {
+        alertDiv.classList.remove('show');
+        alertDiv.style.opacity = '0';
+        alertDiv.style.top = '30px';
+        setTimeout(() => { alertDiv.style.display = 'none'; }, 400);
+      }, 3000);
+    };
+
+    clearHistoryBtn.addEventListener('click', async () => {
+        if (!confirm('确定要清除所有历史记录吗？')) return;
+        try {
+            const res = await fetch('/clear_history/', { method: 'POST', headers: { 'X-CSRFToken': getCSRFToken() }});
+            const data = await res.json();
+            if (data.success) {
+                showAlert('历史记录已清空', 'success');
+                loadHistory();
+            } else {
+                showAlert(data.error || '清空失败', 'danger');
+            }
+        } catch (e) {
+            showAlert('清空操作失败', 'danger');
+        }
+    });
+
+  });
+  </script>
+</body>
+</html>

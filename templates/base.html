@@ -1,0 +1,72 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}双向手语翻译系统{% endblock %}</title>
+    
+    <link rel="icon" href="{% static 'images/favicon.ico' %}" type="image/x-icon">
+
+    <!-- 第三方库 -->
+    <link href="{% static 'vendor/bootstrap/css/bootstrap.min.css' %}" rel="stylesheet">
+    <link href="{% static 'vendor/bootstrap-icons/bootstrap-icons.css' %}" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'vendor/fontawesome/css/all.min.css' %}">
+    
+    <!-- 本地字体 -->
+    <link rel="stylesheet" href="{% static 'css/fonts.css' %}">
+    
+    <!-- 核心样式文件 -->
+    <link rel="stylesheet" href="{% static 'css/theme.css' %}"> <!-- 主题颜色 -->
+    <link rel="stylesheet" href="{% static 'css/layout.css' %}"> <!-- 全局布局 -->
+    
+    <script src="{% static 'js/theme-switcher.js' %}" defer></script>
+
+    <!-- 子模板专属样式插槽 -->
+    {% block extra_styles %}{% endblock %}
+</head>
+
+<body data-bs-theme="dark">
+
+    <div class="theme-switcher">
+        <i class="fas fa-sun"></i>
+        <i class="fas fa-moon"></i>
+    </div>
+
+    <div class="sidebar">
+        <div class="logo-container">
+            <img src="{% static 'images/logo.png' %}" alt="Logo" class="logo">
+            <h4>双向手语翻译系统</h4>
+            <p>基于ASL实现手语双向翻译<br>帮助残障人士与世界沟通</p>
+        </div>
+        <ul class="nav-links">
+            {% block nav_links %}
+                <li><a href="{% url 'sign_app:realtime' %}"><i class="bi bi-camera"></i> 孤立手语识别</a></li>
+                <li><a href="{% url 'sign_app:continuous' %}"><i class="bi bi-collection-play"></i> 连续手语翻译</a></li>
+                <li><a href="{% url 'sign_app:animation' %}"><i class="bi bi-play-circle"></i> 手语动画生成</a></li>
+                <li><a href="{% url 'sign_app:image_recognition' %}"><i class="bi bi-images"></i> 中文手语图片识别</a></li>
+                <li><a href="{% url 'sign_app:video_recognition' %}"><i class="bi bi-film"></i> 中文手语视频识别</a></li>
+                <li><a href="{% url 'sign_app:learning' %}"><i class="bi bi-book"></i> 学习模式</a></li>
+                <li><a href="{% url 'sign_app:statistics' %}"><i class="bi bi-bar-chart-line"></i> 统计分析</a></li>
+                <li><a href="{% url 'sign_app:technology' %}"><i class="bi bi-lightbulb"></i> 技术原理</a></li>
+                <li><a href="{% url 'sign_app:about' %}"><i class="bi bi-people"></i> 关于我们</a></li>
+            {% endblock %}
+        </ul>
+    </div>
+
+    <div class="app-container">
+        {% block content %}
+        <!-- 子页面的独特内容将会被插入到这里 -->
+        {% endblock %}
+        
+        <footer>
+            <p>手势识别系统 © 2025 | 基于Django和PyTorch构建</p>
+        </footer>
+    </div>
+
+    <script src="{% static 'vendor/bootstrap/js/bootstrap.bundle.min.js' %}"></script>
+    
+    {% block extra_scripts %}{% endblock %}
+
+</body>
+</html>
